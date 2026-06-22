@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiveM Mixology Register & Commission Calculator</title>
+    <style>
+        :root {
+            --primary: #14151b;
+            --accent: #d4af37; /* Gold theme for premium lounge/bar */
+            --bg: #0b0c10;
+            --card-bg: #1f2128;
+            --text: #e2e8f0;
+            --border: #2c2f3a;
+            --success: #2ecc71;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .menu-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #fff;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .item-meta {
+            font-size: 0.85em;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .comm-badge {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--accent);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: #2d313f;
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: #4a5168;
+        }
+
+        .qty-input {
+            width: 45px;
+            text-align: center;
+            border: 1px solid var(--border);
+            background: #14151b;
+            color: #fff;
+            padding: 6px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .receipt-section {
+            background: var(--primary);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: #cbd5e0;
+            border-bottom: 1px dashed #2c2f3a;
+            padding-bottom: 8px;
+        }
+
+        .receipt-item-comm {
+            font-size: 0.8em;
+            color: #a0aec0;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .totals {
+            margin-top: 20px;
+            border-top: 2px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .grand-total {
+            font-size: 1.7em;
+            font-weight: bold;
+            color: #fff;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 10px;
+        }
+
+        .mixologist-cut {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: 12px;
+            background: #c53030;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: #af2626;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Menu Grid -->
+    <div class="menu-section">
+        <h2><span>Register Items</span> <span style="font-size: 0.7em; color: var(--accent);">FiveM Edition</span></h2>
+        <div id="menu-container"></div>
+    </div>
+
+    <!-- Live Receipt Panel -->
+    <div class="receipt-section">
+        <h2>Live Invoice</h2>
+        <div id="receipt-items" style="max-height: 280px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
+            <div style="color: #718096; text-align: center; padding: 20px 0;">No items added yet</div>
+        </div>
+        
+        <div class="totals">
+            <div class="summary-row">
+                <span>Mixologist Payout:</span>
+                <span id="mixologist-amount" class="mixologist-cut">$0</span>
+            </div>
+            <div class="summary-row grand-total">
+                <span>TOTAL BILL:</span>
+                <span id="total-amount" style="color: var(--accent);">$0</span>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="clear-btn" onclick="clearOrder()">Clear Register</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Menu Data adjusted to precisely match image_34629c.png fixed pricing & commissions
+    const menuItems = [
+        { id: 1, name: "Premium Hand-Rolled Cigar", price: 100, commission: 0.10 },
+        { id: 2, name: "Average Hand-Rolled Cigar", price: 50, commission: 0.05 },
+        { id: 3, name: "Champagne Bottle", price: 100, commission: 0.10 },
+        { id: 4, name: "Champagne Glass", price: 65, commission: 0.05 },
+        { id: 5, name: "Millennium Midnight", price: 60, commission: 0.05 },
+        { id: 6, name: "Eve's Martini (Appletini)", price: 50, commission: 0.05 },
+        { id: 7, name: "Top-Shelf Aged Liquor (Per Glass)", price: 55, commission: 0.05 },
+        { id: 8, name: "Y2K Cosmopolitan", price: 45, commission: 0.05 },
+        { id: 9, name: "The Wall Street Tomahawk", price: 100, commission: 0.10 },
+        { id: 10, name: "Lobster Cocktail", price: 70, commission: 0.05 },
+        { id: 11, name: "Truffle-Infused Carpaccio", price: 50, commission: 0.05 }
+    ];
+
+    let orderState = {};
+    menuItems.forEach(item => {
+        orderState[item.id] = { qty: 0 };
+    });
+
+    function renderMenu() {
+        const container = document.getElementById('menu-container');
+        container.innerHTML = '';
+
+        menuItems.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-meta">
+                        <span>$${item.price}</span>
+                        <span class="comm-badge">${item.commission * 100}% Cut</span>
+                    </div>
+                </div>
+                <div class="item-controls">
+                    <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                    <input type="text" class="qty-input" id="qty-${item.id}" value="0" readonly>
+                    <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function updateQty(id, change) {
+        let currentQty = orderState[id].qty;
+        let newQty = currentQty + change;
+        if (newQty >= 0) {
+            orderState[id].qty = newQty;
+            document.getElementById(`qty-${id}`).value = newQty;
+            calculateTotals();
+        }
+    }
+
+    function calculateTotals() {
+        const receiptContainer = document.getElementById('receipt-items');
+        receiptContainer.innerHTML = '';
+        let totalBill = 0;
+        let totalCommission = 0;
+        let itemsAdded = 0;
+
+        menuItems.forEach(item => {
+            const state = orderState[item.id];
+            if (state.qty > 0) {
+                itemsAdded++;
+                const itemTotal = state.qty * item.price;
+                const itemCommission = itemTotal * item.commission;
+                
+                totalBill += itemTotal;
+                totalCommission += itemCommission;
+
+                const receiptItem = document.createElement('div');
+                receiptItem.className = 'receipt-item';
+                receiptItem.innerHTML = `
+                    <div>
+                        <strong>${state.qty}x ${item.name}</strong>
+                        <span class="receipt-item-comm">Mixologist cut: $${itemCommission.toFixed(2)}</span>
+                    </div>
+                    <span style="font-weight: 600;">$${itemTotal.toLocaleString()}</span>
+                `;
+                receiptContainer.appendChild(receiptItem);
+            }
+        });
+
+        if(itemsAdded === 0) {
+            receiptContainer.innerHTML = '<div style="color: #718096; text-align: center; padding: 20px 0;">No items added yet</div>';
+        }
+
+        document.getElementById('total-amount').innerText = `$${totalBill.toLocaleString()}`;
+        document.getElementById('mixologist-amount').innerText = `$${totalCommission.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function clearOrder() {
+        menuItems.forEach(item => {
+            orderState[item.id].qty = 0;
+        });
+        renderMenu();
+        calculateTotals();
+    }
+
+    renderMenu();
+</script>
+
+</body>
+</html>
